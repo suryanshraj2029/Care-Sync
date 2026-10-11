@@ -27,6 +27,9 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-local-development-onl
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'https://care-sync-2.onrender.com',
+]
 
 
 # Application definition
