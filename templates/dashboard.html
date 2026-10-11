@@ -1,0 +1,679 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync | Dashboard</title>
+
+    <style>
+        :root {
+            --primary: #1769aa;
+            --primary-dark: #104c80;
+            --background: #f3f7fc;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        header {
+            background: linear-gradient(120deg, #123b67, #1769aa);
+            color: white;
+            padding: 20px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .brand p {
+            margin: 6px 0 0;
+            color: #dbeafe;
+            font-size: 13px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-info strong {
+            display: block;
+        }
+
+        .user-info span {
+            font-size: 13px;
+            color: #dbeafe;
+        }
+
+        .logout-button {
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-button:hover {
+            background: #eaf3ff;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 32px auto;
+            padding: 0 22px 40px;
+        }
+
+        .welcome {
+            margin-bottom: 25px;
+        }
+
+        .welcome h2 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .welcome p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px #0f172a08;
+        }
+
+        .summary-card p {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px #0f172a08;
+            margin-bottom: 24px;
+        }
+
+        .panel-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .panel-heading h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .role-label {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #e0f2fe;
+            color: #075985;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .action-link {
+            display: inline-block;
+            text-decoration: none;
+            background: var(--primary);
+            color: white;
+            padding: 11px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 7px 5px 0;
+        }
+
+        .action-link:hover {
+            background: var(--primary-dark);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-booked {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-arrived {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-in_consultation {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-cancelled,
+        .status-no_show {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-select {
+            padding: 9px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: white;
+            min-width: 140px;
+        }
+
+        .update-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 13px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .update-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .update-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 35px 15px;
+            color: var(--muted);
+        }
+
+        .empty-state h4 {
+            color: var(--text);
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .message {
+            padding: 12px 15px;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        footer {
+            text-align: center;
+            padding: 22px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 760px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            main {
+                margin-top: 24px;
+                padding: 0 14px 30px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            .welcome h2 {
+                font-size: 24px;
+            }
+
+            .user-info {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">
+        <h1>CareSync</h1>
+        <p>Your health, connected.</p>
+    </div>
+
+    <div class="user-area">
+        <div class="user-info">
+            <strong>{{ request.user.username }}</strong>
+            <span>{{ request.user.get_role_display }}</span>
+        </div>
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="logout-button" type="submit">Logout</button>
+        </form>
+    </div>
+</header>
+
+<main>
+
+    <section class="welcome">
+        <h2>
+            {% if dashboard_type == "patient" %}
+                Welcome back, {{ request.user.username }}!
+            {% elif dashboard_type == "doctor" %}
+                Welcome, Dr. {{ request.user.username }}!
+            {% elif dashboard_type == "receptionist" %}
+                Receptionist Dashboard
+            {% elif dashboard_type == "admin" %}
+                Admin Dashboard
+            {% else %}
+                Welcome to CareSync
+            {% endif %}
+        </h2>
+
+        <p>
+            {% if dashboard_type == "patient" %}
+                Manage your appointments and healthcare visits.
+            {% elif dashboard_type == "doctor" %}
+                Review your schedule and manage patient appointments.
+            {% elif dashboard_type == "receptionist" %}
+                Manage patient bookings and appointment schedules.
+            {% elif dashboard_type == "admin" %}
+                Monitor appointments and access administration.
+            {% else %}
+                Your account role is not configured.
+            {% endif %}
+        </p>
+    </section>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <section class="summary-grid">
+        <div class="summary-card">
+            <p>Total appointments</p>
+            <h3>{{ appointments|length }}</h3>
+        </div>
+
+        <div class="summary-card">
+            <p>Active appointments</p>
+            <h3>{{ active_appointments_count|default:"—" }}</h3>
+        </div>
+
+        <div class="summary-card">
+            <p>Account role</p>
+            <h3 style="font-size: 22px;">
+                {{ request.user.get_role_display }}
+            </h3>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h3>Quick Actions</h3>
+            <span class="role-label">
+                {{ request.user.get_role_display }}
+            </span>
+        </div>
+
+        {% if dashboard_type == "patient" %}
+            <a class="action-link" href="/">Book an Appointment</a>
+
+        {% elif dashboard_type == "doctor" %}
+            <a class="action-link" href="#appointments">
+                View My Appointments
+            </a>
+
+        {% elif dashboard_type == "receptionist" %}
+            <a class="action-link" href="/">
+                Manage Appointments
+            </a>
+
+        {% elif dashboard_type == "admin" %}
+            <a class="action-link" href="/admin/">
+                Open Admin Panel
+            </a>
+            <a class="action-link" href="/">
+                Visit CareSync Home
+            </a>
+        {% endif %}
+    </section>
+
+    <section class="panel" id="appointments">
+        <div class="panel-heading">
+            <h3>
+                {% if dashboard_type == "patient" %}
+                    My Appointments
+                {% elif dashboard_type == "doctor" %}
+                    My Patient Appointments
+                {% else %}
+                    All Appointments
+                {% endif %}
+            </h3>
+        </div>
+
+        {% if appointments %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            {% if dashboard_type != "patient" %}
+                                <th>Patient</th>
+                            {% endif %}
+
+                            {% if dashboard_type != "doctor" %}
+                                <th>Doctor</th>
+                            {% endif %}
+
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Status</th>
+
+                            {% if dashboard_type != "patient" %}
+                                <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                {% if dashboard_type != "patient" %}
+                                    <td>{{ appointment.patient.username }}</td>
+                                {% endif %}
+
+                                {% if dashboard_type != "doctor" %}
+                                    <td>{{ appointment.doctor.username }}</td>
+                                {% endif %}
+
+                                <td>
+                                    {{ appointment.appointment_date|date:"d M Y" }}
+                                </td>
+
+                                <td>
+                                    {{ appointment.start_time|time:"h:i A" }}
+                                </td>
+
+                                <td>
+                                    {{ appointment.end_time|time:"h:i A" }}
+                                </td>
+
+                                <td>
+                                    <span class="status status-{{ appointment.status|lower }}">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                </td>
+
+                                {% if dashboard_type != "patient" %}
+                                    <td>
+                                        {% if appointment.status != "CANCELLED" and appointment.status != "COMPLETED" and appointment.status != "NO_SHOW" %}
+                                            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                                                <select
+                                                    class="status-select"
+                                                    id="status-{{ appointment.id }}"
+                                                    aria-label="New status for appointment {{ appointment.id }}"
+                                                >
+                                                    <option value="BOOKED"
+                                                        {% if appointment.status == "BOOKED" %}selected{% endif %}>
+                                                        Booked
+                                                    </option>
+
+                                                    <option value="CONFIRMED"
+                                                        {% if appointment.status == "CONFIRMED" %}selected{% endif %}>
+                                                        Confirmed
+                                                    </option>
+
+                                                    <option value="ARRIVED"
+                                                        {% if appointment.status == "ARRIVED" %}selected{% endif %}>
+                                                        Arrived
+                                                    </option>
+
+                                                    <option value="IN_CONSULTATION"
+                                                        {% if appointment.status == "IN_CONSULTATION" %}selected{% endif %}>
+                                                        In Consultation
+                                                    </option>
+
+                                                    <option value="COMPLETED"
+                                                        {% if appointment.status == "COMPLETED" %}selected{% endif %}>
+                                                        Completed
+                                                    </option>
+
+                                                    <option value="CANCELLED"
+                                                        {% if appointment.status == "CANCELLED" %}selected{% endif %}>
+                                                        Cancelled
+                                                    </option>
+
+                                                    <option value="NO_SHOW"
+                                                        {% if appointment.status == "NO_SHOW" %}selected{% endif %}>
+                                                        No-show
+                                                    </option>
+                                                </select>
+
+                                                <button
+                                                    type="button"
+                                                    class="update-button"
+                                                    id="update-{{ appointment.id }}"
+                                                    onclick="updateAppointmentStatus({{ appointment.id }})"
+                                                >
+                                                    Update
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <span style="color:#64748b;">Closed</span>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="empty-state">
+                <h4>No appointments yet</h4>
+                <p>Appointment records will appear here when available.</p>
+
+                {% if dashboard_type == "patient" %}
+                    <a class="action-link" href="/">
+                        Book Your First Appointment
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+
+</main>
+
+<footer>
+    CareSync &copy; 2026 | Healthcare appointment management
+</footer>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+
+        if (document.cookie) {
+            const cookies = document.cookie.split(";");
+
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(
+                        cookie.substring(name.length + 1)
+                    );
+                    break;
+                }
+            }
+        }
+
+        return cookieValue;
+    }
+
+    async function updateAppointmentStatus(appointmentId) {
+        const select = document.getElementById(
+            "status-" + appointmentId
+        );
+
+        const button = document.getElementById(
+            "update-" + appointmentId
+        );
+
+        if (!select || !button) {
+            alert("Status controls could not be found.");
+            return;
+        }
+
+        const newStatus = select.value;
+
+        button.disabled = true;
+        button.textContent = "Updating...";
+
+        try {
+            const response = await fetch(
+                `/api/appointments/${appointmentId}/status/`,
+                {
+                    method: "PATCH",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(
+                    data.error ||
+                    data.detail ||
+                    "Could not update appointment status."
+                );
+                return;
+            }
+
+            alert(data.message || "Appointment status updated.");
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Appointment status error:", error);
+            alert("Unable to connect to the server. Please try again.");
+
+        } finally {
+            button.disabled = false;
+            button.textContent = "Update";
+        }
+    }
+</script>
+
+</body>
+</html>

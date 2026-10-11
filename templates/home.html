@@ -1,0 +1,840 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync | Healthcare Management</title>
+
+    <style>
+        :root {
+            --navy: #12304a;
+            --blue: #1976d2;
+            --light: #f3f7fb;
+            --green: #16805d;
+            --red: #c0392b;
+            --text: #243447;
+            --muted: #64748b;
+            --border: #dce5ee;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 16px 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        nav a, .nav-button {
+            color: white;
+            text-decoration: none;
+            padding: 9px 12px;
+            border: 1px solid #527087;
+            border-radius: 7px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        nav a:hover, .nav-button:hover {
+            background: #284b65;
+        }
+
+        .hero {
+            padding: 55px 6%;
+            background: linear-gradient(120deg, #12304a, #1976d2);
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(30px, 5vw, 44px);
+            margin: 0 0 15px;
+        }
+
+        .hero p {
+            line-height: 1.7;
+            max-width: 650px;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: auto;
+            padding: 28px 20px 55px;
+        }
+
+        .section-title {
+            margin: 12px 0 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 15px rgba(20, 45, 70, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 14px 0 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: white;
+            font-size: 15px;
+        }
+
+        button, .button {
+            display: inline-block;
+            border: none;
+            background: var(--blue);
+            color: white;
+            padding: 11px 16px;
+            border-radius: 7px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        button:hover, .button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .secondary {
+            background: var(--navy);
+        }
+
+        .danger {
+            background: var(--red);
+        }
+
+        .success {
+            color: var(--green);
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .message {
+            padding: 12px 15px;
+            background: #e8f5ee;
+            border-radius: 7px;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            background: #fdecec;
+            color: #922b21;
+        }
+
+        .appointment {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .appointment:last-child {
+            border-bottom: none;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            background: #eaf2ff;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            background: var(--navy);
+            color: white;
+        }
+
+        .inline-form {
+            display: inline;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 16px 4%;
+            }
+
+            .hero {
+                padding: 38px 5%;
+            }
+
+            .container {
+                padding: 20px 14px 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">🩺 CareSync</div>
+
+    <nav>
+        <a href="/">Home</a>
+
+        {% if user.is_authenticated %}
+            <a href="/accounts/dashboard/">Dashboard</a>
+
+            {% if user.role == "DOCTOR" or user.role == "RECEPTIONIST" or user.role == "ADMIN" %}
+                <a href="/availability/manage/">Manage Availability</a>
+            {% endif %}
+
+            {% if user.role == "ADMIN" %}
+                <a href="/admin/">Admin Panel</a>
+            {% endif %}
+
+            <form class="inline-form" method="post"
+                  action="/accounts/logout/">
+                {% csrf_token %}
+                <button class="nav-button" type="submit">Logout</button>
+            </form>
+        {% else %}
+            <a href="/accounts/login/">Login</a>
+            <a href="/accounts/register/">Register</a>
+        {% endif %}
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Your Health, Connected.</h1>
+    <p>
+        Welcome to CareSync, a healthcare appointment management system
+        that connects patients, doctors, receptionists, and administrators
+        through one simple platform.
+    </p>
+
+    {% if not user.is_authenticated %}
+        <a class="button" href="/accounts/register/">Get Started</a>
+        <a class="button secondary" href="/accounts/login/">Login</a>
+    {% else %}
+        <a class="button" href="/accounts/dashboard/">Open Dashboard</a>
+    {% endif %}
+</section>
+
+<main class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <h2 class="section-title">CareSync Services</h2>
+
+    <div class="grid">
+        <div class="card">
+            <div class="feature-icon">📅</div>
+            <h3>Appointment Booking</h3>
+            <p class="muted">
+                Find available doctors and book an appointment.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="feature-icon">👨‍⚕️</div>
+            <h3>Doctor Availability</h3>
+            <p class="muted">
+                Doctors can publish their available dates and times.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="feature-icon">📋</div>
+            <h3>Appointment Tracking</h3>
+            <p class="muted">
+                Follow the status of an appointment through your dashboard.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="feature-icon">🔐</div>
+            <h3>Role-Based Access</h3>
+            <p class="muted">
+                Separate access for patients, doctors, receptionists,
+                and administrators.
+            </p>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+
+        <h2 class="section-title">Welcome, {{ user.username }}</h2>
+
+        <div class="card">
+            <h3>Your Account</h3>
+            <p>
+                <strong>Role:</strong>
+                {{ user.get_role_display|default:user.role }}
+            </p>
+
+            <a class="button" href="/accounts/dashboard/">
+                Go to Dashboard
+            </a>
+
+            {% if user.role == "DOCTOR" or user.role == "RECEPTIONIST" or user.role == "ADMIN" %}
+                <a class="button secondary" href="/availability/manage/">
+                    Manage Availability
+                </a>
+            {% endif %}
+
+            {% if user.role == "ADMIN" %}
+                <a class="button secondary" href="/admin/">
+                    Django Admin
+                </a>
+            {% endif %}
+        </div>
+
+        {% if user.role == "PATIENT" or user.role == "RECEPTIONIST" or user.role == "ADMIN" %}
+
+            <section class="card" id="booking">
+                <h2>Book an Appointment</h2>
+                <p class="muted">
+                    Choose a doctor, date, and available time.
+                </p>
+
+                <div id="booking-message" aria-live="polite"></div>
+
+                <form id="booking-form">
+                    <label for="doctor">Doctor</label>
+                    <select id="doctor" required>
+                        <option value="">Loading doctors...</option>
+                    </select>
+
+                    <label for="appointment-date">Appointment Date</label>
+                    <input type="date" id="appointment-date" required>
+
+                    <label for="availability">Available Time</label>
+                    <select id="availability" required>
+                        <option value="">Select a doctor and date first</option>
+                    </select>
+
+                    {% if user.role == "RECEPTIONIST" or user.role == "ADMIN" %}
+                        <label for="patient-id">Patient User ID</label>
+                        <input type="number" id="patient-id" min="1"
+                               placeholder="Enter the patient's user ID" required>
+                        <p class="muted">
+                            Enter the existing patient account's database ID.
+                        </p>
+                    {% endif %}
+
+                    <button type="submit" id="book-button">
+                        Book Appointment
+                    </button>
+                </form>
+            </section>
+
+        {% endif %}
+
+        <section class="card">
+            <h2>Your Appointments</h2>
+            <p class="muted">
+                Your appointments and their current status.
+            </p>
+
+            <div id="appointment-message" aria-live="polite"></div>
+            <div id="appointments-list">Loading appointments...</div>
+        </section>
+
+    {% else %}
+
+        <div class="card">
+            <h2>Get Started with CareSync</h2>
+            <p>
+                Register as a patient to book appointments, or log in
+                if you already have an account.
+            </p>
+            <a class="button" href="/accounts/register/">Register as Patient</a>
+            <a class="button secondary" href="/accounts/login/">Login</a>
+        </div>
+
+    {% endif %}
+
+</main>
+
+<footer>
+    <p>CareSync — Healthcare Appointment Management</p>
+    <p class="muted">Connecting patients and healthcare professionals.</p>
+</footer>
+
+{% if user.is_authenticated %}
+<script>
+    const currentRole = "{{ user.role|escapejs }}";
+    const currentUserId = Number("{{ user.id }}");
+
+    const doctorSelect = document.getElementById("doctor");
+    const dateInput = document.getElementById("appointment-date");
+    const availabilitySelect = document.getElementById("availability");
+    const bookingForm = document.getElementById("booking-form");
+    const bookingMessage = document.getElementById("booking-message");
+    const appointmentMessage = document.getElementById("appointment-message");
+    const appointmentsList = document.getElementById("appointments-list");
+
+    function getCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+
+            if (cookie.startsWith(name + "=")) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+
+        return "";
+    }
+
+    async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            }
+        });
+
+        const text = await response.text();
+        let data = {};
+
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch {
+            data = { detail: text || "Unexpected server response." };
+        }
+
+        if (!response.ok) {
+            const detail = data.detail || data.error || data.message;
+            const errors = detail
+                ? (typeof detail === "string" ? detail : JSON.stringify(detail))
+                : JSON.stringify(data);
+
+            throw new Error(errors || `Request failed (${response.status})`);
+        }
+
+        return data;
+    }
+
+    function showMessage(element, message, isError = false) {
+        element.replaceChildren();
+
+        const paragraph = document.createElement("p");
+        paragraph.className = isError
+            ? "message error-message"
+            : "message";
+        paragraph.textContent = message;
+
+        element.appendChild(paragraph);
+    }
+
+    function clearMessage(element) {
+        element.replaceChildren();
+    }
+
+    function asArray(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.results)) return data.results;
+        return [];
+    }
+
+    function formatDate(value) {
+        return value || "";
+    }
+
+    function formatTime(value) {
+        return value ? value.slice(0, 5) : "";
+    }
+
+    async function loadDoctors() {
+        if (!doctorSelect) return;
+
+        try {
+            const data = await apiRequest("/api/availability/");
+            const records = asArray(data);
+            const doctors = new Map();
+
+            records.forEach(item => {
+                if (item.doctor && item.doctor_name) {
+                    doctors.set(String(item.doctor), item.doctor_name);
+                }
+            });
+
+            doctorSelect.replaceChildren();
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = doctors.size
+                ? "Select a doctor"
+                : "No available doctors found";
+            doctorSelect.appendChild(placeholder);
+
+            for (const [id, name] of doctors) {
+                const option = document.createElement("option");
+                option.value = id;
+                option.textContent = name;
+                doctorSelect.appendChild(option);
+            }
+        } catch (error) {
+            doctorSelect.replaceChildren();
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Unable to load doctors";
+            doctorSelect.appendChild(option);
+            showMessage(bookingMessage, error.message, true);
+        }
+    }
+
+    async function loadAvailability() {
+        if (!availabilitySelect) return;
+
+        availabilitySelect.replaceChildren();
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Loading available times...";
+        availabilitySelect.appendChild(placeholder);
+
+        const doctorId = doctorSelect.value;
+        const date = dateInput.value;
+
+        if (!doctorId || !date) {
+            placeholder.textContent = "Select a doctor and date first";
+            return;
+        }
+
+        try {
+            const query = new URLSearchParams({
+                doctor_id: doctorId,
+                date: date
+            });
+
+            const data = await apiRequest(
+                "/api/availability/?" + query.toString()
+            );
+
+            const records = asArray(data);
+            availabilitySelect.replaceChildren();
+
+            const availableRecords = records.filter(item =>
+                item.is_available &&
+                String(item.doctor) === String(doctorId) &&
+                item.date === date
+            );
+
+            const initial = document.createElement("option");
+            initial.value = "";
+            initial.textContent = availableRecords.length
+                ? "Select an available period"
+                : "No availability found for this date";
+            availabilitySelect.appendChild(initial);
+
+            availableRecords.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent =
+                    `${formatTime(item.start_time)} - ${formatTime(item.end_time)}`;
+                availabilitySelect.appendChild(option);
+            });
+        } catch (error) {
+            availabilitySelect.replaceChildren();
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Unable to load availability";
+            availabilitySelect.appendChild(option);
+            showMessage(bookingMessage, error.message, true);
+        }
+    }
+
+    async function loadAppointments() {
+        try {
+            const data = await apiRequest("/api/appointments/");
+            const appointments = asArray(data);
+
+            appointmentsList.replaceChildren();
+
+            if (!appointments.length) {
+                appointmentsList.textContent = "No appointments found.";
+                return;
+            }
+
+            appointments.forEach(appointment => {
+                const item = document.createElement("div");
+                item.className = "appointment";
+
+                const title = document.createElement("h3");
+                title.textContent =
+                    `${appointment.patient_name || "Patient"} — ` +
+                    `${appointment.doctor_name || "Doctor"}`;
+
+                const details = document.createElement("p");
+                details.textContent =
+                    `Date: ${formatDate(appointment.appointment_date)} | ` +
+                    `Time: ${formatTime(appointment.start_time)}–` +
+                    `${formatTime(appointment.end_time)}`;
+
+                const status = document.createElement("span");
+                status.className = "status";
+                status.textContent = appointment.status || "Unknown";
+
+                item.append(title, details, status);
+
+                const canCancel =
+                    !["CANCELLED", "COMPLETED", "NO_SHOW"]
+                        .includes(appointment.status);
+
+                if (canCancel) {
+                    const cancelButton = document.createElement("button");
+                    cancelButton.className = "danger";
+                    cancelButton.textContent = "Cancel Appointment";
+
+                    cancelButton.addEventListener("click", async () => {
+                        if (!confirm("Are you sure you want to cancel this appointment?")) {
+                            return;
+                        }
+
+                        cancelButton.disabled = true;
+
+                        try {
+                            await apiRequest(
+                                `/api/appointments/${appointment.id}/cancel/`,
+                                {
+                                    method: "PATCH",
+                                    headers: {
+                                        "X-CSRFToken": getCookie("csrftoken")
+                                    },
+                                    body: JSON.stringify({})
+                                }
+                            );
+
+                            showMessage(
+                                appointmentMessage,
+                                "Appointment cancelled successfully."
+                            );
+
+                            await loadAppointments();
+                            if (typeof loadAvailability === "function") {
+                                await loadAvailability();
+                            }
+                        } catch (error) {
+                            showMessage(appointmentMessage, error.message, true);
+                            cancelButton.disabled = false;
+                        }
+                    });
+
+                    item.appendChild(cancelButton);
+                }
+
+                if (["DOCTOR", "RECEPTIONIST", "ADMIN"].includes(currentRole)) {
+                    const statusSelect = document.createElement("select");
+                    statusSelect.style.marginTop = "12px";
+
+                    const statuses = [
+                        ["BOOKED", "Booked"],
+                        ["CONFIRMED", "Confirmed"],
+                        ["ARRIVED", "Arrived"],
+                        ["IN_CONSULTATION", "In consultation"],
+                        ["COMPLETED", "Completed"],
+                        ["CANCELLED", "Cancelled"],
+                        ["NO_SHOW", "No-show"]
+                    ];
+
+                    statuses.forEach(([value, label]) => {
+                        const option = document.createElement("option");
+                        option.value = value;
+                        option.textContent = label;
+                        option.selected = value === appointment.status;
+                        statusSelect.appendChild(option);
+                    });
+
+                    const updateButton = document.createElement("button");
+                    updateButton.className = "secondary";
+                    updateButton.textContent = "Update Status";
+
+                    updateButton.addEventListener("click", async () => {
+                        updateButton.disabled = true;
+
+                        try {
+                            await apiRequest(
+                                `/api/appointments/${appointment.id}/status/`,
+                                {
+                                    method: "PATCH",
+                                    headers: {
+                                        "X-CSRFToken": getCookie("csrftoken")
+                                    },
+                                    body: JSON.stringify({
+                                        status: statusSelect.value
+                                    })
+                                }
+                            );
+
+                            showMessage(
+                                appointmentMessage,
+                                "Appointment status updated."
+                            );
+                            await loadAppointments();
+                        } catch (error) {
+                            showMessage(appointmentMessage, error.message, true);
+                            updateButton.disabled = false;
+                        }
+                    });
+
+                    item.append(statusSelect, updateButton);
+                }
+
+                appointmentsList.appendChild(item);
+            });
+        } catch (error) {
+            appointmentsList.textContent = "Unable to load appointments.";
+            showMessage(appointmentMessage, error.message, true);
+        }
+    }
+
+    if (bookingForm) {
+        doctorSelect.addEventListener("change", loadAvailability);
+        dateInput.addEventListener("change", loadAvailability);
+
+        // Do not allow choosing a past date in the browser.
+        const today = new Date();
+        const localToday = [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, "0"),
+            String(today.getDate()).padStart(2, "0")
+        ].join("-");
+        dateInput.min = localToday;
+
+        bookingForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            clearMessage(bookingMessage);
+
+            const availabilityId = availabilitySelect.value;
+
+            if (!availabilityId) {
+                showMessage(
+                    bookingMessage,
+                    "Please select an available time period.",
+                    true
+                );
+                return;
+            }
+
+            const payload = {
+                availability: Number(availabilityId)
+            };
+
+            {% if user.role == "RECEPTIONIST" or user.role == "ADMIN" %}
+            const patientId = document.getElementById("patient-id").value;
+
+            if (!patientId) {
+                showMessage(bookingMessage, "Enter the patient user ID.", true);
+                return;
+            }
+
+            payload.patient = Number(patientId);
+            {% endif %}
+
+            const button = document.getElementById("book-button");
+            button.disabled = true;
+
+            try {
+                await apiRequest("/api/appointments/", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                showMessage(
+                    bookingMessage,
+                    "Appointment booked successfully."
+                );
+
+                bookingForm.reset();
+                dateInput.min = localToday;
+                availabilitySelect.replaceChildren();
+
+                await loadDoctors();
+                await loadAppointments();
+            } catch (error) {
+                showMessage(bookingMessage, error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        loadDoctors();
+    }
+
+    loadAppointments();
+</script>
+{% endif %}
+
+</body>
+</html>

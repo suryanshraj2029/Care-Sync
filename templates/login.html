@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync | Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #123b70;
+            color: white;
+            padding: 20px 8%;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 35px 16px;
+        }
+
+        .form-card {
+            background: white;
+            width: 100%;
+            max-width: 430px;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 5px 25px #0f172a12;
+        }
+
+        h1 {
+            color: #123b70;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #1764b0;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 13px;
+            background: #1764b0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0e4d8b;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        a {
+            color: #1764b0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <header>CareSync</header>
+
+    <main>
+        <section class="form-card">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Log in to manage your appointments.</p>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                    autocomplete="username"
+                    value="{{ request.POST.username|default:'' }}"
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                >
+
+                <button type="submit">Log In</button>
+            </form>
+
+            <p class="link">
+                Don't have an account?
+                <a href="{% url 'register' %}">Register</a>
+            </p>
+
+            <p class="link">
+                <a href="{% url 'home' %}">Back to Home</a>
+            </p>
+        </section>
+    </main>
+
+    <footer>CareSync — Healthcare made simpler.</footer>
+</body>
+</html>

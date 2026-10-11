@@ -1,0 +1,488 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync | Book Appointment</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: #123b67;
+            color: white;
+            padding: 22px 6%;
+        }
+
+        header h1 { margin: 0 0 6px; }
+        header p { margin: 0; color: #dbeafe; }
+
+        main {
+            max-width: 850px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0f172a0d;
+        }
+
+        h2 { color: #123b67; margin-top: 0; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 16px 0 7px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: white;
+            font-size: 15px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 7px;
+            padding: 12px 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .primary { background: #2563eb; color: white; }
+        .secondary { background: #e2e8f0; color: #1e293b; }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 7px;
+            margin-bottom: 16px;
+            overflow-wrap: anywhere;
+        }
+
+        .message.show { display: block; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .success { background: #dcfce7; color: #166534; }
+        .info { background: #dbeafe; color: #1e40af; }
+
+        .muted { color: #64748b; font-size: 14px; }
+
+        .appointment {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 17px; }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>CareSync</h1>
+    <p>Book your medical appointment</p>
+</header>
+
+<main>
+    <section class="card">
+        <h2>Book an Appointment</h2>
+        <p class="muted">
+            Choose an available doctor and appointment slot.
+        </p>
+
+        <div id="message" class="message" role="status"
+             aria-live="polite"></div>
+
+        <form id="bookingForm">
+            <label for="doctor">Doctor</label>
+            <select id="doctor" required>
+                <option value="">Loading doctors...</option>
+            </select>
+
+            <label for="date">Appointment Date</label>
+            <input type="date" id="date" required>
+
+            <label for="slot">Available Time Slot</label>
+            <select id="slot" required disabled>
+                <option value="">Select a doctor and date first</option>
+            </select>
+
+            <p id="slotInfo" class="muted"></p>
+
+            <button type="submit" class="primary" id="bookButton">
+                Book Appointment
+            </button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>My Appointments</h2>
+        <button type="button" class="secondary" id="refreshButton">
+            Refresh Appointments
+        </button>
+        <div id="myAppointments">
+            <p class="muted">Loading your appointments...</p>
+        </div>
+    </section>
+</main>
+
+<script>
+    const API = "/api/";
+    const doctorSelect = document.getElementById("doctor");
+    const dateInput = document.getElementById("date");
+    const slotSelect = document.getElementById("slot");
+    const message = document.getElementById("message");
+    const bookButton = document.getElementById("bookButton");
+    const slotInfo = document.getElementById("slotInfo");
+
+    let availabilitySlots = [];
+
+    function showMessage(text, type = "info") {
+        message.textContent = text;
+        message.className = "message show " + type;
+    }
+
+    function formatError(data) {
+        if (!data) return "Request failed.";
+        if (typeof data === "string") return data;
+        if (data.detail) return data.detail;
+
+        return Object.entries(data)
+            .map(([key, value]) => {
+                return key + ": " +
+                    (Array.isArray(value) ? value.join(" ") : String(value));
+            })
+            .join(" | ");
+    }
+
+    async function apiRequest(url, options = {}) {
+        const headers = {
+            "Accept": "application/json",
+            ...(options.headers || {})
+        };
+
+        if (options.body) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        const response = await fetch(url, {
+            ...options,
+            headers,
+            credentials: "same-origin"
+        });
+
+        const text = await response.text();
+        let data = null;
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = text;
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(formatError(data));
+        }
+
+        return data;
+    }
+
+    function getArray(data) {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.results)) return data.results;
+        return [];
+    }
+
+    function getDoctorId(slot) {
+        if (slot.doctor && typeof slot.doctor === "object") {
+            return slot.doctor.id;
+        }
+        return slot.doctor ?? slot.doctor_id;
+    }
+
+    function getDoctorName(slot) {
+        if (slot.doctor && typeof slot.doctor === "object") {
+            return slot.doctor.username ||
+                slot.doctor.name ||
+                ("Doctor " + slot.doctor.id);
+        }
+        return "Doctor " + getDoctorId(slot);
+    }
+
+    async function loadDoctors() {
+        try {
+            const data = await apiRequest(API + "availability/");
+            const slots = getArray(data).filter(
+                slot => slot.is_available === true
+            );
+
+            const uniqueDoctors = new Map();
+
+            slots.forEach(slot => {
+                const id = getDoctorId(slot);
+                if (id != null) {
+                    uniqueDoctors.set(String(id), {
+                        id,
+                        name: getDoctorName(slot)
+                    });
+                }
+            });
+
+            doctorSelect.replaceChildren();
+
+            const first = document.createElement("option");
+            first.value = "";
+            first.textContent = uniqueDoctors.size
+                ? "Select a doctor"
+                : "No doctors with open slots";
+            doctorSelect.appendChild(first);
+
+            [...uniqueDoctors.values()].forEach(doctor => {
+                const option = document.createElement("option");
+                option.value = doctor.id;
+                option.textContent = doctor.name;
+                doctorSelect.appendChild(option);
+            });
+        } catch (error) {
+            doctorSelect.innerHTML =
+                '<option value="">Could not load doctors</option>';
+            showMessage(error.message, "error");
+        }
+    }
+
+    async function loadSlots() {
+        slotSelect.replaceChildren();
+        slotSelect.disabled = true;
+        slotInfo.textContent = "";
+        availabilitySlots = [];
+
+        if (!doctorSelect.value || !dateInput.value) {
+            slotSelect.innerHTML =
+                '<option value="">Select a doctor and date first</option>';
+            return;
+        }
+
+        slotSelect.innerHTML = '<option value="">Loading slots...</option>';
+
+        try {
+            const url = API + "availability/?date=" +
+                encodeURIComponent(dateInput.value);
+
+            const data = await apiRequest(url);
+
+            availabilitySlots = getArray(data).filter(slot =>
+                slot.is_available === true &&
+                String(getDoctorId(slot)) === String(doctorSelect.value)
+            );
+
+            slotSelect.replaceChildren();
+
+            const first = document.createElement("option");
+            first.value = "";
+            first.textContent = availabilitySlots.length
+                ? "Select a time slot"
+                : "No available slots on this date";
+            slotSelect.appendChild(first);
+
+            availabilitySlots.forEach(slot => {
+                const option = document.createElement("option");
+                option.value = slot.id;
+                option.textContent =
+                    slot.start_time + " - " + slot.end_time;
+                slotSelect.appendChild(option);
+            });
+
+            slotSelect.disabled = availabilitySlots.length === 0;
+
+            if (!availabilitySlots.length) {
+                slotInfo.textContent =
+                    "Try another date or select a different doctor.";
+            }
+        } catch (error) {
+            slotSelect.innerHTML =
+                '<option value="">Could not load time slots</option>';
+            showMessage(error.message, "error");
+        }
+    }
+
+    async function loadMyAppointments() {
+        const container = document.getElementById("myAppointments");
+        container.textContent = "Loading appointments...";
+
+        try {
+            const data = await apiRequest(API + "appointments/");
+            const appointments = getArray(data);
+
+            container.replaceChildren();
+
+            if (!appointments.length) {
+                container.textContent = "You have no appointments yet.";
+                return;
+            }
+
+            appointments.forEach(appointment => {
+                const card = document.createElement("div");
+                card.className = "appointment";
+
+                const details = document.createElement("p");
+                details.textContent =
+                    "Appointment #" + appointment.id +
+                    " | Doctor: " +
+                    (appointment.doctor_name ??
+                     appointment.doctor ??
+                     "—") +
+                    " | Date: " +
+                    (appointment.appointment_date ?? "—") +
+                    " | Time: " +
+                    (appointment.start_time ?? "—") +
+                    " | Status: " +
+                    (appointment.status ?? "—");
+
+                card.appendChild(details);
+
+                if (
+                    !["CANCELLED", "COMPLETED", "NO_SHOW"].includes(
+                        appointment.status
+                    )
+                ) {
+                    const cancelButton = document.createElement("button");
+                    cancelButton.type = "button";
+                    cancelButton.className = "secondary";
+                    cancelButton.textContent = "Cancel Appointment";
+
+                    cancelButton.addEventListener("click", async () => {
+                        if (!confirm("Cancel this appointment?")) return;
+
+                        try {
+                            await apiRequest(
+                                API + "appointments/" +
+                                appointment.id + "/cancel/",
+                                { method: "POST" }
+                            );
+
+                            showMessage(
+                                "Appointment cancelled successfully.",
+                                "success"
+                            );
+                            await loadMyAppointments();
+                        } catch (error) {
+                            showMessage(error.message, "error");
+                        }
+                    });
+
+                    card.appendChild(cancelButton);
+                }
+
+                container.appendChild(card);
+            });
+        } catch (error) {
+            container.textContent = error.message;
+        }
+    }
+
+    doctorSelect.addEventListener("change", loadSlots);
+    dateInput.addEventListener("change", loadSlots);
+
+    document.getElementById("refreshButton").addEventListener(
+        "click",
+        loadMyAppointments
+    );
+
+    document.getElementById("bookingForm").addEventListener(
+        "submit",
+        async event => {
+            event.preventDefault();
+
+            if (!doctorSelect.value || !dateInput.value ||
+                !slotSelect.value) {
+                showMessage(
+                    "Please select a doctor, date, and time slot.",
+                    "error"
+                );
+                return;
+            }
+
+            const selectedSlot = availabilitySlots.find(
+                slot => String(slot.id) === String(slotSelect.value)
+            );
+
+            if (!selectedSlot) {
+                showMessage(
+                    "Please select a valid available slot.",
+                    "error"
+                );
+                return;
+            }
+
+            // These field names must match AppointmentSerializer.
+            const payload = {
+                doctor: Number(doctorSelect.value),
+                availability: Number(selectedSlot.id),
+                appointment_date: selectedSlot.date,
+                start_time: selectedSlot.start_time
+            };
+
+            bookButton.disabled = true;
+
+            try {
+                await apiRequest(API + "appointments/", {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                showMessage(
+                    "Appointment booked successfully!",
+                    "success"
+                );
+
+                await loadMyAppointments();
+                await loadSlots();
+            } catch (error) {
+                showMessage(error.message, "error");
+            } finally {
+                bookButton.disabled = false;
+            }
+        }
+    );
+
+    // Do not allow selecting a date in the past.
+    const today = new Date();
+    const localToday = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
+
+    dateInput.min = localToday;
+
+    loadDoctors();
+    loadMyAppointments();
+</script>
+</body>
+</html>
